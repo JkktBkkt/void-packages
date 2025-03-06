@@ -1,6 +1,6 @@
 # Template file for 'nvidia-open-dkms'
 pkgname=nvidia-open-dkms
-version=550.124.04
+version=570.124.04
 revision=1
 archs="x86_64"
 depends="dkms nvidia"
