@@ -1,0 +1,26 @@
+# Template file for 'ProtonPlus'
+pkgname=ProtonPlus
+version=0.4.27
+revision=1
+archs="x86_64"
+build_style=meson
+configure_args="--prefix=/usr"
+meson_builddir="build-native"
+hostmakedepends="ninja vala"
+makedepends="gtk4-devel libadwaita-devel json-glib-devel libsoup3-devel
+ libarchive-devel glib pkg-config cmake gettext libgee08-devel desktop-file-utils
+ glib-networking appstream-glib"
+short_desc="Simple compatibility tools manager for GNOME"
+maintainer="JkktBkkt <apkabikov+void@gmail.com>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/Vysp3r/ProtonPlus/"
+distfiles="https://github.com/Vysp3r/ProtonPlus/archive/refs/tags/v${version}.tar.gz"
+checksum=3fe5d8548fe4d3669fd002d5d23997894932ed6a7d9b23943ceaf2af5dd29e77
+
+pkg_install() {
+	DESTDIR="${PKGDESTDIR}" ninja install
+}
+
+post_install() {
+	ln -s com.vysp3r.ProtonPlus "${DESTDIR}/usr/bin/ProtonPlus"
+}
