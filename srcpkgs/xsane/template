@@ -2,20 +2,19 @@
 pkgname=xsane
 version=0.999
 revision=6
+_gitlab_release_hash=87edc38e6886ad8f31c2b7b289ddf162c88099c8
 build_style="gnu-configure"
 configure_args="--disable-gimp"
-hostmakedepends="pkg-config sane-devel gettext"
-makedepends="gtk+-devel lcms-devel sane-devel"
+hostmakedepends="automake pkg-config sane-devel gettext-devel-tools"
+makedepends="gtk+3-devel lcms2-devel sane-devel"
 depends="sane"
 short_desc="GTK-based X11 frontend for SANE"
 maintainer="Orphaned <orphan@voidlinux.org>"
 license="GPL-2.0-or-later"
 homepage="http://www.xsane.org"
-distfiles="${DEBIAN_SITE}/main/x/xsane/xsane_${version}.orig.tar.gz"
-checksum=5782d23e67dc961c81eef13a87b17eb0144cae3d1ffc5cf7e0322da751482b4b
+distfiles="https://gitlab.com/sane-project/frontend/xsane/-/archive/${_gitlab_release_hash}/xsane-${_gitlab_release_hash}.tar.gz"
+checksum=d238514bbd8b3b2909413c6a41459964cdc94903321504a9425ade39ec14b82b
 
-post_patch() {
-	vsed -i -e 's/DATADIRNAME=.*/DATADIRNAME=share/' \
-		-e 's,/usr/local/include,/usr/include,' \
-		configure
+pre_configure() {
+	autoreconf -fi
 }
