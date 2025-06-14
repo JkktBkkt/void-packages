@@ -348,6 +348,7 @@ replaces="
  ladish-devel<=1_11
  ladish<=1_11
  laditools<=1.1.0_3
+ lcms<=1.19_11
  libArcus-devel<=4.13.1_8
  libArcus-python3<=4.13.1_8
  libArcus<=4.13.1_8
