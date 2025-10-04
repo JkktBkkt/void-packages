@@ -1,11 +1,12 @@
 # Template file for 'libxml2'
 pkgname=libxml2
-version=2.13.8
+version=2.13.9
 revision=1
 build_style=gnu-configure
 configure_args="--with-threads --with-history --with-icu
- --with-legacy --with-ftp --with-xptr-locs --enable-static"
-hostmakedepends="gettext pkg-config python3 python3-packaging-bootstrap"
+ --with-legacy --with-ftp --with-xptr-locs --enable-static --with-schematron"
+hostmakedepends="gettext pkg-config python3 python3-packaging-bootstrap
+ automake libtool"
 makedepends="zlib-devel ncurses-devel readline-devel liblzma-devel icu-devel
  python3-devel"
 short_desc="Library providing XML and HTML support"
@@ -14,7 +15,7 @@ license="MIT"
 homepage="https://gitlab.gnome.org/GNOME/libxml2"
 changelog="https://gitlab.gnome.org/GNOME/libxml2/-/raw/master/NEWS"
 distfiles="${GNOME_SITE}/libxml2/${version%.*}/libxml2-${version}.tar.xz"
-checksum=277294cb33119ab71b2bc81f2f445e9bc9435b893ad15bb2cd2b0e859a0ee84a
+checksum=a2c9ae7b770da34860050c309f903221c67830c86e4a7e760692b803df95143a
 python_version=3
 CFLAGS="-I$XBPS_CROSS_BASE/usr/include/python$py3_ver"
 
@@ -24,6 +25,10 @@ post_extract() {
 		rm -f test/ebcdic_566012.xml
 		rm -f test/icu_parse_test.xml
 	fi
+}
+
+pre_configure() {
+	autoreconf -fi
 }
 
 post_install() {
