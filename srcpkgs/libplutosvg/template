@@ -1,0 +1,21 @@
+# Template file for 'plutosvg'
+pkgname=libplutosvg
+version=0.0.7
+revision=1
+build_style=cmake
+makedepends="libplutovg-devel"
+short_desc="Tiny SVG rendering library in C"
+maintainer="JkktBkkt <apkabikov@gmail.com>"
+license="MIT"
+homepage="https://github.com/sammycage/plutosvg"
+distfiles="https://github.com/sammycage/plutosvg/archive/refs/tags/v${version}.tar.gz"
+checksum=78561b571ac224030cdc450ca2986b4de915c2ba7616004a6d71a379bffd15f3
+
+libplutosvg-devel_package() {
+	depends="libplutovg-devel libplutosvg>=${version}_${revision}"
+	short_desc+=" - development files"
+	pkg_install() {
+		vmove usr/include
+		vmove usr/lib/pkgconfig
+	}
+}
