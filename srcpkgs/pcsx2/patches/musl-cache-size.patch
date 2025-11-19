@@ -1,0 +1,45 @@
+diff --git a/common/Linux/LnxHostSys.cpp.orig b/common/Linux/LnxHostSys.cpp
+index b2578bc..6f9fdde 100644
+--- a/common/Linux/LnxHostSys.cpp.orig
++++ b/common/Linux/LnxHostSys.cpp
+@@ -144,6 +144,21 @@ size_t HostSys::GetRuntimePageSize()
+ 	return (res > 0) ? static_cast<size_t>(res) : 0;
+ }
+ 
++int LocalReadInt(const char *filename, int *value) {
++  char line[64];
++  int fd = open(filename, O_RDONLY), err = -1;
++
++  if (fd < 0)
++    return -1;
++  if (read(fd, line, sizeof(line)) > 0) {
++    *value = atoi(line);
++    err = 0;
++  }
++
++  close(fd);
++  return err;
++}
++
+ size_t HostSys::GetRuntimeCacheLineSize()
+ {
+ #if defined(__FreeBSD__)
+@@ -162,8 +177,16 @@ size_t HostSys::GetRuntimeCacheLineSize()
+ 
+ 	return static_cast<size_t>(max_line_size);
+ #else
+-	int l1i = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+-	int l1d = sysconf(_SC_LEVEL1_ICACHE_LINESIZE);
++	int l1i, l1d;
++
++	# if defined(_SC_LEVEL1_DCACHE_LINESIZE) && defined(_SC_LEVEL1_ICACHE_LINESIZE)
++		l1i = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
++		l1d = sysconf(_SC_LEVEL1_ICACHE_LINESIZE);
++	# else
++		LocalReadInt("/sys/devices/system/cpu/cpu0/cache/index1/size", &l1i);
++		LocalReadInt("/sys/devices/system/cpu/cpu0/cache/index0/size", &l1d);
++	# endif
++
+ 	int res = (l1i > l1d) ? l1i : l1d;
+ 	for (int index = 0; index < 16; index++)
+ 	{

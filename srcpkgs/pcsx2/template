@@ -1,6 +1,6 @@
 # Template file for 'pcsx2'
 pkgname=pcsx2
-version=2.2.0
+version=2.4.0
 revision=1
 archs="x86_64*"
 build_style=cmake
@@ -9,21 +9,24 @@ configure_args="-DCMAKE_BUILD_TYPE=Release -DUSE_BACKTRACE=OFF
  -DCMAKE_EXE_LINKER_FLAGS_INIT=-fuse-ld=lld
  -DCMAKE_MODULE_LINKER_FLAGS_INIT=-fuse-ld=lld
  -DCMAKE_MODULE_LINKER_FLAGS_INIT=-fuse-ld=lld
- -DUSE_LINKED_FFMPEG=ON -DDISABLE_ADVANCE_SIMD=TRUE"
+ -DUSE_LINKED_FFMPEG=ON -DDISABLE_ADVANCE_SIMD=ON"
 hostmakedepends="clang extra-cmake-modules lld llvm pkg-config qt6-base
  qt6-tools shaderc"
-makedepends="SDL2-devel ffmpeg6-devel freetype-devel libcurl-devel
+makedepends="SDL3-devel ffmpeg6-devel freetype-devel libcurl-devel
  libjpeg-turbo-devel liblz4-devel libpcap-devel libpng-devel libwebp-devel
- libzstd-devel qt6-base-devel zlib-devel"
+ libzstd-devel qt6-base-devel zlib-devel kddockwidgets-devel fmt-devel
+ libplutovg-devel libplutosvg-devel qt6-base-private-devel"
+depends="qt6-declarative"
+# ^ allegedly, can't test
 short_desc="Playstation 2 Emulator"
-maintainer="chrysos349 <chrysostom349@gmail.com>"
+maintainer="JkktBkkt <apkabikov+void@gmail.com>"
 license="GPL-3.0-or-later"
 homepage="https://pcsx2.net"
 changelog="https://github.com/PCSX2/pcsx2/releases"
 distfiles="https://github.com/PCSX2/pcsx2/archive/refs/tags/v${version}.tar.gz
  https://github.com/PCSX2/pcsx2_patches/releases/download/latest/patches.zip"
-checksum="473d05f01f31f3cc18bbce13d9bce0916b8bf69721673772442845972de16ef4
- 7f163c1a93e3dee6da7efac86f30e4f26f1675010167f75afaefe4da0ea5f92b"
+checksum="b18f0f4c28e482e7f88c5f428bd445fd511facabbb426dfd72d55ee904cc74c1
+ 3164cf73bdabbfe6cb33d2e6c55e2d79d535750ca4cf7c46db2f8436cf79a5c1"
 skip_extraction="patches.zip"
 
 pre_configure() {
@@ -33,7 +36,8 @@ pre_configure() {
 }
 
 pre_build() {
-	vsed -i build/common/include/svnrev.h -e "s/Unknown/v${version}/"
+	# fix for Qt 6.10 (honestly stolen from AUR)
+	sed -E -e 's@\b(Qt6::)?(Gui)\b@\1\2 \1\2Private@' -i cmake/SearchForStuff.cmake pcsx2-qt/CMakeLists.txt
 }
 
 do_install() {
