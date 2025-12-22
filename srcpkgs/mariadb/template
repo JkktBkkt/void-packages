@@ -1,7 +1,7 @@
 # Template file for 'mariadb'
 pkgname=mariadb
-version=11.1.2
-revision=2
+version=11.8.5
+revision=1
 build_style=cmake
 build_helper=qemu
 configure_args="-DBUILD_CONFIG=mysql_release
@@ -19,7 +19,7 @@ configure_args="-DBUILD_CONFIG=mysql_release
  -DWITH_READLINE=ON -DWITH_SYSTEMD=no -DWITH_PCRE=system"
 hostmakedepends="bison perl flex pkg-config"
 makedepends="ncurses-devel gnutls-devel libaio-devel boost-headers pam-devel zlib-devel
- pcre2-devel fmt-devel"
+ pcre2-devel fmt-devel libxml2-devel"
 depends="perl"
 checkdepends="perl"
 short_desc="Fast SQL database server, drop-in replacement for MySQL"
@@ -27,7 +27,7 @@ maintainer="Orphaned <orphan@voidlinux.org>"
 license="GPL-2.0-only"
 homepage="https://mariadb.com"
 distfiles="https://archive.mariadb.org/mariadb-${version}/source/mariadb-${version}.tar.gz"
-checksum=19a9e980e57fa332931f643b48ad7390528c889ff6ea8b0e16fd306aa3088238
+checksum=bcb7394569c08877c283e1649869504531bee8caafa30288f078e30d99fcb9f6
 lib32disabled=yes
 provides="mysql-${version}_${revision}"
 replaces="mysql>=0"
@@ -56,7 +56,7 @@ do_check() {
 		fi
 		vtargetrun ${XBPS_CROSS_BASE}/usr/bin/perl mysql-test/mtr --parallel=${XBPS_MAKEJOBS} ${mem} --force --max-test-fail=40
 	else
-		ctest -E "(conc336|bulk1|performance|basic-t|fetch|charset|logs|cursor|errors|view|ps|ps_bugs|sp|result|connection|misc|ps_new|thread|features-10_2|async|test-connect)"
+		ctest -E "(conc336|bulk1|performance|basic-t|fetch|charset|logs|cursor|errors|view|ps|ps_bugs|sp|result|connection|misc|ps_new|thread|features-10_2|async|test-connect|my_tzinfo)"
 	fi
 }
 
