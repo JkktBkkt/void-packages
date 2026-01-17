@@ -1,0 +1,27 @@
+Cherry-picked from:
+From: Krzysztof Gogolewski <krzysztof.gogolewski@tweag.io>
+Date: Mon, 13 Nov 2023 22:58:12 +0100
+Subject: [PATCH] Document defaulting of RuntimeReps
+
+Fixes #24099
+---
+ docs/users_guide/extending_ghc.rst            |  1 +
+ docs/users_guide/exts/data_kinds.rst          | 10 +++----
+ docs/users_guide/exts/linear_types.rst        |  5 +++-
+ docs/users_guide/exts/primitives.rst          |  2 +-
+ .../exts/representation_polymorphism.rst      | 29 +++++++++++++++++++
+ docs/users_guide/using-warnings.rst           |  2 +-
+ 6 files changed, 41 insertions(+), 8 deletions(-)
+
+diff --git a/docs/users_guide/extending_ghc.rst b/docs/users_guide/extending_ghc.rst
+index 9db7f5ffaae1..d89b51b87ccf 100644
+--- a/docs/users_guide/extending_ghc.rst
++++ b/docs/users_guide/extending_ghc.rst
+@@ -1383,6 +1383,7 @@ The plugin has type ``WantedConstraints -> [DefaultingProposal]``.
+ * It is given the currently unsolved constraints.
+ * It returns a list of independent "defaulting proposals".
+ * Each proposal of type ``DefaultingProposal`` specifies:
++
+   * ``deProposals``: specifies a list,
+     in priority order, of sets of type variable assignments
+   * ``deProposalCts :: [Ct]`` gives a set of constraints (always a
