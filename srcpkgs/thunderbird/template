@@ -3,7 +3,7 @@
 # THIS PKG MUST BE SYNCHRONIZED WITH "srcpkgs/thunderbird-i18n".
 #
 pkgname=thunderbird
-version=140.8.1
+version=140.11.1
 revision=1
 build_helper="rust"
 hostmakedepends="autoconf unzip zip pkg-config perl python3.11 yasm rust cargo
@@ -21,7 +21,7 @@ maintainer="classabbyamp <void@placeviolette.net>"
 license="MPL-2.0, GPL-2.0-or-later, LGPL-2.1-or-later"
 homepage="https://www.thunderbird.net/"
 distfiles="${MOZILLA_SITE}/thunderbird/releases/${version}esr/source/thunderbird-${version}esr.source.tar.xz"
-checksum=5dda3da4d14e49a946b27d22f7375a17702cdd5213ae3d8821db0d469742abda
+checksum=43eda66c8fa85acf0de854699e1f404ab852bd24e9f3ee81140edc034af79161
 
 alternatives="librnp:/usr/lib/thunderbird/librnp.so:/usr/lib/thunderbird/thunderbird-librnp.so"
 shlib_provides="librnp.so" # alternative
