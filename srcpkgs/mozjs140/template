@@ -1,6 +1,6 @@
 # Template file for 'mozjs140'
 pkgname=mozjs140
-version=140.3.0
+version=140.11.0
 revision=1
 build_wrksrc=js/src
 build_style=gnu-configure
@@ -20,7 +20,7 @@ maintainer="oreo639 <oreo6391@gmail.com>"
 license="MPL-2.0"
 homepage="https://spidermonkey.dev"
 distfiles="${MOZILLA_SITE}/firefox/releases/${version}esr/source/firefox-${version}esr.source.tar.xz"
-checksum=efc6eb3c93756311bd2f9db3796c0bbee6e3f182975d857284168b3dec672316
+checksum=1b034d2117356fda24807a151055132315c6ba58ad2bdf7ec71ee707fac5e028
 
 LDFLAGS="-Wl,-z,stack-size=1048576"
 

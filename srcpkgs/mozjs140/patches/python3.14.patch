@@ -1,0 +1,226 @@
+From 4a8e9c0b1b6924f734c90486790a7c011faeda84 Mon Sep 17 00:00:00 2001
+From: Alex Hochheiden <ahochheiden@mozilla.com>
+Date: Wed, 15 Oct 2025 05:42:37 +0000
+Subject: [PATCH] Bug 1993797 - Fix AST parsing in DecoratorVisitor for Python
+ 3.14 r=firefox-build-system-reviewers,glandium
+
+This is necessary due to the `ast.Str` removal in 3.14.
+
+Differential Revision: https://phabricator.services.mozilla.com/D268646
+---
+ python/mach/mach/command_util.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/python/mach/mach/command_util.py b/python/mach/mach/command_util.py
+index d79be8e36613b..8cc467276cf5d 100644
+--- a/python/mach/mach/command_util.py
++++ b/python/mach/mach/command_util.py
+@@ -307,7 +307,7 @@ def visit_FunctionDef(self, node):
+                     # We only care about these 3 kwargs, so we can safely skip the rest
+                     continue
+ 
+-                kwarg_dict[keyword.arg] = getattr(keyword.value, "s", "")
++                kwarg_dict[keyword.arg] = keyword.value.value
+ 
+             command = kwarg_dict.pop("command")
+             self.results.setdefault(command, {})
+From dde4db6dea5c1504db58eee58b05b849600a0c5b Mon Sep 17 00:00:00 2001
+From: Alex Hochheiden <ahochheiden@mozilla.com>
+Date: Tue, 21 Oct 2025 18:26:54 +0000
+Subject: [PATCH] Bug 1993797 - Remove invalid `action="store_true"` from
+ positional arguments in `dispatcher.py`
+ r=firefox-build-system-reviewers,sergesanspaille
+
+In Python 3.14, positional arguments cannot have `action="store_true"`. It seems these were only used
+for help text anyway, and not parsed, so removing this fixes it for Python 3.14 without changing the
+behavior, while maintaining backwards compatibility with Python 3.9.
+
+Differential Revision: https://phabricator.services.mozilla.com/D269410
+---
+ python/mach/mach/dispatcher.py | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/python/mach/mach/dispatcher.py b/python/mach/mach/dispatcher.py
+index abc3b646c6f8a..54b0f9494f17e 100644
+--- a/python/mach/mach/dispatcher.py
++++ b/python/mach/mach/dispatcher.py
+@@ -289,16 +289,14 @@ def _handle_main_help(self, parser, verbose):
+                     group = parser.add_argument_group(title, description)
+ 
+                 description = handler.description
+-                group.add_argument(command, help=description, action="store_true")
++                group.add_argument(command, help=description)
+ 
+         if disabled_commands and "disabled" in r.categories:
+             title, description, _priority = r.categories["disabled"]
+             group = parser.add_argument_group(title, description)
+             if verbose:
+                 for c in disabled_commands:
+-                    group.add_argument(
+-                        c["command"], help=c["description"], action="store_true"
+-                    )
++                    group.add_argument(c["command"], help=c["description"])
+ 
+         parser.print_help()
+ 
+@@ -405,9 +403,7 @@ def by_name(item):
+             subhandlers,
+             key=by_decl_order if handler.order == "declaration" else by_name,
+         ):
+-            group.add_argument(
+-                subcommand, help=subhandler.description, action="store_true"
+-            )
++            group.add_argument(subcommand, help=subhandler.description)
+ 
+         if handler.docstring:
+             parser.description = format_docstring(handler.docstring)
+From b09b27487e5d649612e0baae309608954ff9d542 Mon Sep 17 00:00:00 2001
+From: Jan-Erik Rediger <jrediger@mozilla.com>
+Date: Wed, 27 Aug 2025 01:09:58 +0000
+Subject: [PATCH] Bug 1983736 - Patch jsonschema to work with Python 3.14+
+ r=mach-reviewers,ahal,ahochheiden
+
+Differential Revision: https://phabricator.services.mozilla.com/D262335
+---
+ python/mozbuild/mozbuild/vendor/vendor_python.py       | 4 ++++
+ third_party/python/jsonschema/jsonschema/validators.py | 5 ++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/python/mozbuild/mozbuild/vendor/vendor_python.py b/python/mozbuild/mozbuild/vendor/vendor_python.py
+index 9acee946fc4c8..2801e1b685d51 100644
+--- a/python/mozbuild/mozbuild/vendor/vendor_python.py
++++ b/python/mozbuild/mozbuild/vendor/vendor_python.py
+@@ -40,6 +40,10 @@
+     # modified 'dummy' version of it so that the dependency checks still succeed, but
+     # if it ever is attempted to be used, it will fail gracefully.
+     "ansicon",
++    # jsonschema 4.17.3 is incompatible with Python 3.14+,
++    # but later versions use a dependency with Rust components, which we thus can't vendor.
++    # For now we apply the minimal patch to jsonschema to make it work again.
++    "jsonschema",
+ }
+ 
+ 
+diff --git a/third_party/python/jsonschema/jsonschema/validators.py b/third_party/python/jsonschema/jsonschema/validators.py
+index 66e803ea2d0bf..88316a8bb727e 100644
+--- a/third_party/python/jsonschema/jsonschema/validators.py
++++ b/third_party/python/jsonschema/jsonschema/validators.py
+@@ -875,8 +875,11 @@ def _find_in_subschemas(self, url):
+             return None
+         uri, fragment = urldefrag(url)
+         for subschema in subschemas:
++            id = subschema["$id"]
++            if not isinstance(id, str):
++                continue
+             target_uri = self._urljoin_cache(
+-                self.resolution_scope, subschema["$id"],
++                self.resolution_scope, id,
+             )
+             if target_uri.rstrip("/") == uri.rstrip("/"):
+                 if fragment:
+From d497aa4f770ca02f6083e93b94996a8fe32c2ff4 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh+mozilla@glandium.org>
+Date: Tue, 19 Aug 2025 05:09:09 +0000
+Subject: [PATCH] Bug 1969769 - Change uses of ast.Str with ast.Constant.
+ r=firefox-build-system-reviewers,ahochheiden
+
+ast.Str was deprecated in python 3.12 and removed in 3.14. It inherited
+from ast.Constant, `Str.s` was equivalent to `Constant.value`, so we can
+use the latter on both old and newer python versions.
+
+Differential Revision: https://phabricator.services.mozilla.com/D261512
+---
+ python/mozbuild/mozbuild/frontend/reader.py        | 14 +++++++-------
+ .../mozbuild/mozbuild/vendor/rewrite_mozbuild.py   |  6 ++----
+ 2 files changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/python/mozbuild/mozbuild/frontend/reader.py b/python/mozbuild/mozbuild/frontend/reader.py
+index 9f6292cb909de..89bf9995c1768 100644
+--- a/python/mozbuild/mozbuild/frontend/reader.py
++++ b/python/mozbuild/mozbuild/frontend/reader.py
+@@ -470,7 +470,7 @@ def c(new_node):
+             return c(
+                 ast.Subscript(
+                     value=c(ast.Name(id=self._global_name, ctx=ast.Load())),
+-                    slice=c(ast.Index(value=c(ast.Str(s=node.id)))),
++                    slice=c(ast.Index(value=c(ast.Constant(value=node.id)))),
+                     ctx=node.ctx,
+                 )
+             )
+@@ -1039,8 +1039,8 @@ def assigned_variable(node):
+                 else:
+                     # Others
+                     assert isinstance(target.slice, ast.Index)
+-                    assert isinstance(target.slice.value, ast.Str)
+-                    key = target.slice.value.s
++                    assert isinstance(target.slice.value, ast.Constant)
++                    key = target.slice.value.value
+             elif isinstance(target, ast.Attribute):
+                 assert isinstance(target.attr, str)
+                 key = target.attr
+@@ -1051,11 +1051,11 @@ def assigned_values(node):
+             value = node.value
+             if isinstance(value, ast.List):
+                 for v in value.elts:
+-                    assert isinstance(v, ast.Str)
+-                    yield v.s
++                    assert isinstance(v, ast.Constant)
++                    yield v.value
+             else:
+-                assert isinstance(value, ast.Str)
+-                yield value.s
++                assert isinstance(value, ast.Constant)
++                yield value.value
+ 
+         assignments = []
+ 
+diff --git a/python/mozbuild/mozbuild/vendor/rewrite_mozbuild.py b/python/mozbuild/mozbuild/vendor/rewrite_mozbuild.py
+index cfcc0f18b9a9a..de06b58819b6a 100644
+--- a/python/mozbuild/mozbuild/vendor/rewrite_mozbuild.py
++++ b/python/mozbuild/mozbuild/vendor/rewrite_mozbuild.py
+@@ -327,15 +327,13 @@ def assignment_node_to_source_filename_list(code, node):
+     """
+     if isinstance(node.value, ast.List) and "elts" in node.value._fields:
+         for f in node.value.elts:
+-            if not isinstance(f, ast.Constant) and not isinstance(f, ast.Str):
++            if not isinstance(f, ast.Constant):
+                 log(
+                     "Found non-constant source file name in list: ",
+                     ast_get_source_segment(code, f),
+                 )
+                 return []
+-        return [
+-            f.value if isinstance(f, ast.Constant) else f.s for f in node.value.elts
+-        ]
++        return [f.value for f in node.value.elts]
+     elif isinstance(node.value, ast.ListComp):
+         # SOURCES += [f for f in foo if blah]
+         log("Could not find the files for " + ast_get_source_segment(code, node.value))
+From e6db063cdccce8ace1fc7f7bc881175f9d10b255 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh+mozilla@glandium.org>
+Date: Tue, 19 Aug 2025 05:08:34 +0000
+Subject: [PATCH] Bug 1983713 - Use non-deprecated ast value.
+ r=firefox-build-system-reviewers,nalexander,ahochheiden
+
+ast.Str was deprecated in python 3.12 and removed in 3.14. It inherited
+from ast.Constant, `Str.s` was equivalent to `Constant.value`, so we can
+use the latter on both old and newer python versions.
+
+Differential Revision: https://phabricator.services.mozilla.com/D261511
+---
+ python/mach/mach/command_util.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/python/mach/mach/command_util.py b/python/mach/mach/command_util.py
+index 718b1df2dfaac..b6c905b22d336 100644
+--- a/python/mach/mach/command_util.py
++++ b/python/mach/mach/command_util.py
+@@ -297,7 +297,7 @@ def visit_FunctionDef(self, node):
+             kwarg_dict = {}
+ 
+             for name, arg in zip(["command", "subcommand"], decorator.args):
+-                kwarg_dict[name] = arg.s
++                kwarg_dict[name] = arg.value
+ 
+             for keyword in decorator.keywords:
+                 if keyword.arg not in relevant_kwargs:
